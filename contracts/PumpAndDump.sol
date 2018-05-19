@@ -7,97 +7,110 @@ contract PumpAndDump {
   uint newCoinFeeIncrease = 0.01 ether;
   uint defaultCoinPrice = 0.001 ether;
   uint coinPriceIncrease = 0.0001 ether;
+  uint16[] coinIds; 
 
   struct Coin {
-    uint id;
     string name;
-    string whitePaper;
     uint price;
     uint marketValue;
     address[] investors;
   }
 
-  Coin[] coins;
+  mapping (uint16 => Coin) coins;
 
   constructor() public {
     owner = msg.sender;
   }
 
-  function createCoin(string name, string whitePaper) public payable {
+  function getNewCoinFee() public constant returns (uint) {
+    return newCoinFee;
+  }
+
+  function isCoinIdUnique(uint16 newId) public constant returns (bool) {
+    for (uint i = 0; i < coinIds.length; i++) {
+      if (coinIds[i] == newId) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  function createCoin(uint16 id, string name) public payable {
     require(msg.value >= newCoinFee);
-    Coin storage newCoin;
-    newCoin.id = coins.length; 
-    newCoin.name = name;
-    newCoin.whitePaper = whitePaper;
-    newCoin.price = defaultCoinPrice;
-    newCoin.marketValue = msg.value;
-    coins.push(newCoin);
+    require(id < 17576); // 26*26*26
+    require(bytes(name).length > 0);
+    require(isCoinIdUnique(id));
+    coins[id].name = name;
+    coins[id].price = defaultCoinPrice;
+    coins[id].marketValue = msg.value; 
+    coins[id].investors.push(msg.sender);
+    coinIds.push(id);
     newCoinFee += newCoinFeeIncrease;
   }
 
-  function getNumCoins() public constant returns (uint) {
-    return coins.length;
+  function getCoinIds() public constant returns (uint16[]) {
+    return coinIds;
   }
 
-  function getCoinInfoFromIndex(uint coinIndex) public constant returns (uint, string, string, uint, uint, address[]) {
+  function getCoinInfoFromId(uint16 coinId) public constant returns (string, uint, uint, address[]) {
     return (
-      coins[coinIndex].id,
-      coins[coinIndex].name,
-      coins[coinIndex].whitePaper,
-      coins[coinIndex].price,
-      coins[coinIndex].marketValue,
-      coins[coinIndex].investors
+      coins[coinId].name,
+      coins[coinId].price,
+      coins[coinId].marketValue,
+      coins[coinId].investors
     );
   }
 
-  function getCoinIndexById(uint id) public constant returns (uint) {
-    for (uint i = 0; i < coins.length; i++) {
-        if (coins[i].id == id) {
-          return i;
-        }
-    }
-  }
-
-  function getUserCoinMarketValue(uint coinId, uint userIndex) public constant returns (uint) {
+  function getUserCoinMarketValue(uint16 coinId, uint userIndex) public constant returns (uint) {
       uint marketWeights = (userIndex * (userIndex + 1)) / 2;
       uint atomWeight = coins[coinId].marketValue / marketWeights;
       uint numInvestors = coins[coinId].investors.length;
       return (numInvestors - userIndex) * atomWeight;
   }
 
-  function buyCoin(uint coinId) public payable {
-    uint index = getCoinIndexById(coinId);
-    require(msg.value >= coins[index].price);
-    coins[index].investors.push(msg.sender);
-    coins[index].marketValue += msg.value;
-    coins[index].price += coinPriceIncrease;
+  function buyCoin(uint16 coinId) public payable {
+    require(msg.value >= coins[coinId].price);
+    coins[coinId].investors.push(msg.sender);
+    coins[coinId].marketValue += msg.value;
+    coins[coinId].price += coinPriceIncrease;
   }
 
-  function sellCoin(uint coinId) public {
-    uint coinIndex = getCoinIndexById(coinId);
-    address[] storage investors = coins[coinIndex].investors;
-    for (uint i = 0; i < investors.length; i++) {
-      if (coins[coinIndex].investors[i] == msg.sender) {
-        uint value = getUserCoinMarketValue(coinId, i);
-        coins[coinIndex].investors[i].transfer(value);
-        coins[coinIndex].price -= coinPriceIncrease;
-        coins[coinIndex].marketValue -= value;
-        // Remove coin
-        for (uint j = i; j < investors.length; j++) {
-          coins[coinIndex].investors[j] = investors[j + 1];
-          j++;
-        }
-        coins[coinIndex].investors.length--;
+  function removeInvestor(uint16 coinId, uint investorIndex) public {
+    uint value = getUserCoinMarketValue(coinId, investorIndex);
+    coins[coinId].investors[investorIndex].transfer(value);
+    coins[coinId].price -= coinPriceIncrease;
+    coins[coinId].marketValue -= value;
+    if (coins[coinId].investors.length == 1) {
+      delete coins[coinId].investors[0];
+    } else {
+      for (uint j = investorIndex; j < coins[coinId].investors.length - 1; j++) {
+        coins[coinId].investors[j] = coins[coinId].investors[j + 1];
+      }
+    }
+    coins[coinId].investors.length--;
+  }
+
+  function sellCoin(uint16 coinId) public {
+    bool senderIsInvestor = false;
+    uint investorIndex = 0;
+    for (uint i = 0; i < coins[coinId].investors.length; i++) {
+      if (coins[coinId].investors[i] == msg.sender) {
+        senderIsInvestor = true;
+        investorIndex = i;
         break;
       }
     }
+    if (senderIsInvestor) {
+      removeInvestor(coinId, investorIndex);
+    }
   }
 
-  function retrieveFunds() public view {
+  function retrieveFunds(uint amount) public {
     assert(msg.sender == owner);
     if (msg.sender == owner) {
-      // address contractAddress = this;
-      // owner.transfer(contractAddress.balance)
+    //   address contractAddress = this;
+      owner.transfer(amount);
     }
   }
     

@@ -13,33 +13,43 @@ class Coin extends Component {
   }
 
   buyCoin() {
-    this.props.buyCoin(this.props.coinInfo.id)
+    this.props.buyCoin(this.props.id)
   }
 
   sellCoin() {
-    this.props.sellCoin(this.props.coinInfo.id)
+    this.props.sellCoin(this.props.id)
+  }
+
+  getCodeFromId(id) {
+    return "AAA"
   }
 
   render() {
-    const { name, whitePaper, price, marketValue } = this.props.coinInfo
+    const { id, name, price, marketValue, investors, userAddress } = this.props
+    const coinCode = this.getCodeFromId(id)
     return (
       <div style={{ borderStyle: "solid", borderWidth: 2, padding: 10, margin: 10 }}>
         <div style={{ borderStyle: "solid", borderWidth: 1, padding: 2, margin: 2 }}>
           <div>
-            <b>{name}</b>
+            {coinCode}
           </div>
           <div>
-            {whitePaper}
+            <b>{name}</b>
           </div>
         </div>
         <div>
-          <b>{price}</b>
+          Price: <b>{price}</b>{" "}ETH
         </div>
         <div>
-          {marketValue}
+          Market Value: {marketValue}{" "}ETH
         </div>
-        <input type="button" value="BUY" onClick={() => this.buyCoin()} />
-        <input type="button" value="SELL" onClick={() => this.sellCoin()} />
+
+        {investors.includes(userAddress)
+          ?
+          <input type="button" value="SELL" onClick={() => this.sellCoin()} />
+          :
+          <input type="button" value="BUY" onClick={() => this.buyCoin()} />
+        }
       </div>
     )
   }
