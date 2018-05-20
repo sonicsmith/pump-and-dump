@@ -21,7 +21,12 @@ class Coin extends Component {
   }
 
   getCodeFromId(id) {
-    return "AAA"
+    const code0 = Math.floor((id / 676) + 65)
+    id = id % 676
+    const code1 = Math.floor((id / 26) + 65)
+    id = id % 26
+    const code2 = id + 65
+    return String.fromCharCode(code0) + String.fromCharCode(code1) + String.fromCharCode(code2)
   }
 
   render() {

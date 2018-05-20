@@ -44,11 +44,11 @@ class App extends Component {
     // Coin info
     this.loading++
     this.contractInstance.getCoinIds((err, coinIds) => {
-      console.log("coinIds:", coinIds)
+      console.log("NumCoins:", coinIds.length)
       this.loading--
       if (coinIds) {
+        const newCoinList = []
         coinIds.map((coinId) => {
-          const newCoinList = []
           this.loading++
           this.contractInstance.getCoinInfoFromId(coinId, (err, coinInfo) => {
             this.loading--
@@ -62,6 +62,7 @@ class App extends Component {
                 marketValue: coinInfo[2],
                 investors: coinInfo[3]
               })
+              console.log("Coin loaded:", newCoinList.length, "/", coinIds.length)
               if (newCoinList.length == coinIds.length) {
                 console.log("All coins loaded")
                 this.setState({ coins: newCoinList })
@@ -74,7 +75,10 @@ class App extends Component {
   }
 
   getIdFromCode(code) {
-    return 0;
+    const code0 = code.charCodeAt(0) - 65
+    const code1 = code.charCodeAt(1) - 65
+    const code2 = code.charCodeAt(2) - 65
+    return (code0 * (676)) + (code1 * (26)) + (code2 * 1)
   }
 
   createNewCoin() {
@@ -155,11 +159,12 @@ class App extends Component {
   }
 
   render() {
-    const { coins, creatingCoin, newCoinId, newCoinName } = this.state
+    const { newCoinFee, coins, creatingCoin, newCoinId, newCoinName } = this.state
     const userAddress = this.web3.eth.accounts[0]
     return (
       <div>
         <h1>Pump and Dump</h1>
+        (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
         <h3>Coins:</h3>
         {coins.map((o, i) => {
           return <Coin
@@ -177,8 +182,20 @@ class App extends Component {
         })}
         {creatingCoin &&
           <div>
-            CoinId: <input type="text" value={newCoinId} onChange={e => this.setState({ newCoinId: e.target.value })} />
-            Name: <input type="text" value={newCoinName} onChange={e => this.setState({ newCoinName: e.target.value })} />
+            CoinId: <input
+              type="text"
+              value={newCoinId}
+              onChange={e => {
+                let newValue = e.target.value.toUpperCase()
+                newValue = newValue.replace(/[^a-zA-Z]/g, '')
+                if (newValue.length == 3) console.log(newValue, this.getIdFromCode(newValue))
+                if (newValue.length < 4) {
+                  this.setState({ newCoinId: newValue })
+                }
+              }} />
+            Name: <input type="text" value={newCoinName} onChange={e => this.setState({
+              newCoinName: e.target.value
+            })} />
             <input type="button" value="Create" onClick={() => this.createNewCoin()} />
             <input type="button" value="Cancel" onClick={() => this.setState({ creatingCoin: false })} />
           </div>
