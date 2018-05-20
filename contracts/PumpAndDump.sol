@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-// import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
+// import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract PumpAndDump {
 
@@ -9,9 +9,10 @@ contract PumpAndDump {
 
   address owner;
   uint newCoinFee = 0.01 ether;
-  uint newCoinFeeIncrease = 0.01 ether;
+  uint newCoinFeeIncrease = 0.001 ether;
   uint defaultCoinPrice = 0.001 ether;
   uint coinPriceIncrease = 0.0001 ether;
+  uint devFees = 0;
   uint16[] coinIds;
 
   struct Coin {
@@ -47,10 +48,11 @@ contract PumpAndDump {
     require(id < 17576); // 26*26*26
     require(bytes(name).length > 0);
     require(isCoinIdUnique(id));
+    uint amount = extractDevFee(msg.value);
     coins[id].exists = true;
     coins[id].name = name;
     coins[id].price = defaultCoinPrice;
-    coins[id].marketValue = msg.value; 
+    coins[id].marketValue = amount; 
     coins[id].investors.push(msg.sender);
     coinIds.push(id);
     newCoinFee = newCoinFee.add(newCoinFeeIncrease);
@@ -80,22 +82,22 @@ contract PumpAndDump {
       }
   }
 
-  function isSenderInvestor(address sender, address[] investors) public constant returns (bool) {
-    require(coins[coinId].exists);
+  function isSenderInvestor(address sender, address[] investors) public pure returns (bool) {
     for (uint i = 0; i < investors.length; i++) {
       if (investors[i] == sender) {
         return true;
       }
     }
-    return false
+    return false;
   }
 
   function buyCoin(uint16 coinId) public payable {
     require(msg.value >= coins[coinId].price);
-    require(condition);
-    require(!isSenderInvestor());
+    require(coins[coinId].exists);
+    require(!isSenderInvestor(msg.sender, coins[coinId].investors));
     coins[coinId].investors.push(msg.sender);
-    coins[coinId].marketValue = coins[coinId].marketValue.add(msg.value);
+    uint amount = extractDevFee(msg.value);
+    coins[coinId].marketValue = coins[coinId].marketValue.add(amount);
     coins[coinId].price = coins[coinId].price.add(coinPriceIncrease);
   }
 
@@ -130,12 +132,15 @@ contract PumpAndDump {
     removeInvestor(coinId, investorIndex);
   }
 
-  function retrieveFunds(uint amount) public {
-    assert(msg.sender == owner);
-    if (msg.sender == owner) {
-    //   address contractAddress = this;
-      owner.transfer(amount);
+  function extractDevFee(uint amount) private returns (uint) {
+    uint fee = amount.div(100); // 1 percent
+    devFees.add(fee);
+    if (devFees > 10 finney) {
+      owner.transfer(devFees);
     }
+    return amount.sub(fee);
   }
-    
+
+  function() public payable {}
+
 }
