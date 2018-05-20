@@ -139,7 +139,6 @@ class App extends Component {
         {
           gas: 300000,
           from: web3.eth.accounts[0],
-          value: 0
         },
         (err, result) => {
           if (result != null) {
