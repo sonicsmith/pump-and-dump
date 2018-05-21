@@ -1,7 +1,10 @@
 import React, { Component } from "react"
+import ReactDOM from "react-dom"
 import { abi } from "./../build/contracts/PumpAndDump.json"
 import { contractAddress } from "./constants"
 import Coin from "./Coin"
+import Web3 from "web3"
+const portis = require('portis')
 
 const TEN_SECONDS = 10000
 
@@ -17,10 +20,16 @@ class App extends Component {
       newCoinId: "",
       newCoinName: ""
     }
-    this.web3 = new Web3(web3.currentProvider)
-    const myContract = web3.eth.contract(abi)
+
+    if (typeof web3 !== "undefined") {
+      this.web3 = new Web3(web3.currentProvider)
+    } else {
+      console.log("Using Portis for web3")
+      this.web3 = new Web3(new portis.PortisProvider())
+    }
+    const myContract = this.web3.eth.contract(abi)
     this.contractInstance = myContract.at(contractAddress)
-    this.loading = 0;
+    this.loading = 0
     this.updateState()
     setInterval(this.updateState.bind(this), TEN_SECONDS)
   }
@@ -30,7 +39,7 @@ class App extends Component {
   }
 
   updateState() {
-    if (this.loading > 0) {
+    if (!this.web3 || this.loading > 0) {
       return
     }
     console.log("Checking if need to update state")
@@ -44,24 +53,22 @@ class App extends Component {
     // Coin info
     this.loading++
     this.contractInstance.getCoinIds((err, coinIds) => {
-      console.log("NumCoins:", coinIds.length)
       this.loading--
       if (coinIds) {
+        coinIds.sort()
         const newCoinList = []
-        coinIds.map((coinId) => {
+        coinIds.map((coinId, index) => {
           this.loading++
           this.contractInstance.getCoinInfoFromId(coinId, (err, coinInfo) => {
             this.loading--
             if (coinInfo) {
-              console.log("Coin info:")
-              console.log(coinInfo);
-              newCoinList.push({
+              newCoinList[index] = {
                 id: coinId,
                 name: coinInfo[0],
                 price: coinInfo[1],
                 marketValue: coinInfo[2],
                 investors: coinInfo[3]
-              })
+              }
               console.log("Coin loaded:", newCoinList.length, "/", coinIds.length)
               if (newCoinList.length == coinIds.length) {
                 console.log("All coins loaded")
@@ -206,4 +213,7 @@ class App extends Component {
   }
 }
 
-export default App
+ReactDOM.render(
+  <App />,
+  document.getElementById("root")
+)
