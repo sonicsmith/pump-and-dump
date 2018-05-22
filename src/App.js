@@ -170,7 +170,6 @@ class App extends Component {
     const userAddress = this.web3.eth.accounts[0]
     return (
       <div>
-        <h1>Pump and Dump</h1>
         (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
         <h3>Coins:</h3>
         {coins.map((o, i) => {
