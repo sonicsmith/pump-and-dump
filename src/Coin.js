@@ -1,7 +1,4 @@
 import React, { Component } from "react"
-// import { abi } from "./../build/contracts/PumpAndDump.json"
-// import { contractAddress } from "./constants"
-
 
 class Coin extends Component {
 
@@ -38,9 +35,9 @@ class Coin extends Component {
     }
     const coinCode = this.getCodeFromId(id)
     return (
-      <div style={{ borderStyle: "solid", borderWidth: 2, padding: 10, margin: 10 }}>
-        <div style={{ borderStyle: "solid", borderWidth: 1, padding: 5, margin: 2 }}>
-          <div>
+      <div style={{ height: "200%", borderColor: "transparent", borderRadius: 15, borderStyle: "solid", borderWidth: 2, padding: 10, margin: 10, backgroundColor: "#18BC9C" }}>
+        <div style={{ borderColor: "transparent", borderRadius: 10, borderStyle: "solid", borderWidth: 1, padding: 5, margin: 2, backgroundColor: "#EEEE" }}>
+          <div style={{ padding: 10 }}>
             <b>{name}</b> ({coinCode}), Market Value: {marketValue}{" "}ETH
             <span style={{ float: "right" }}>
               {investors.includes(userAddress)

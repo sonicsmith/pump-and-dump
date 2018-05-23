@@ -24,9 +24,11 @@ class App extends Component {
 
     if (typeof web3 !== "undefined") {
       this.web3 = new Web3(web3.currentProvider)
+      this.setInfoMessage("Connected to blockchain with Web3 provider", "green")
     } else {
       console.log("Using Portis for web3")
       this.web3 = new Web3(new portis.PortisProvider())
+      this.setInfoMessage("Connected to blockchain with Portis", "green")
     }
     if (this.web3) {
       const myContract = this.web3.eth.contract(abi)
@@ -35,8 +37,7 @@ class App extends Component {
       this.updateState()
       setInterval(this.updateState.bind(this), ONE_MINUTE)
     } else {
-      this.state.infoMessage = "Cannot connect to blockchain"
-      this.state.messageColor = "red"
+      setInfoMessage("Cannot connect to blockchain", "red")
     }
   }
 
@@ -44,7 +45,7 @@ class App extends Component {
     // this.setState({ infoMessage: message })
     // this.setState({ messageColor: color || "black" })
     ReactDOM.render(
-      <div >{message}</div>,
+      <div>{message}</div>,
       document.getElementById("dappInfo")
     )
   }
@@ -200,7 +201,7 @@ class App extends Component {
         {infoMessage ?
           <div style={{ textAlign: "center", color: messageColor }}><h3>{infoMessage}</h3></div>
           : null}
-        <div style={{ textAlign: "center", padding: 20 }}>
+        <div style={{ textAlign: "center", padding: 5 }}>
           (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
         </div>
         <div style={{ textAlign: "center", padding: 20 }}>
@@ -224,7 +225,7 @@ class App extends Component {
               <input type="button" value="Cancel" onClick={() => this.setState({ creatingCoin: false })} />
             </div>
             ||
-            <input type="button" value="Create New Coin" onClick={() => this.setState({ creatingCoin: true })} />}
+            <input style={{ borderRadius: 5, padding: 10 }} type="button" value="Create New Coin" onClick={() => this.setState({ creatingCoin: true })} />}
         </div>
       </div>
     )
