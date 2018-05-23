@@ -6,7 +6,7 @@ import Coin from "./Coin"
 import Web3 from "web3"
 const portis = require('portis')
 
-const TEN_SECONDS = 10000
+const ONE_MINUTE = 60000
 
 class App extends Component {
 
@@ -18,7 +18,8 @@ class App extends Component {
       newCoinFee: 0,
       creatingCoin: false,
       newCoinId: "",
-      newCoinName: ""
+      newCoinName: "",
+      infoMessage: ""
     }
 
     if (typeof web3 !== "undefined") {
@@ -27,15 +28,25 @@ class App extends Component {
       console.log("Using Portis for web3")
       this.web3 = new Web3(new portis.PortisProvider())
     }
-    const myContract = this.web3.eth.contract(abi)
-    this.contractInstance = myContract.at(contractAddress)
-    this.loading = 0
-    this.updateState()
-    setInterval(this.updateState.bind(this), TEN_SECONDS)
+    if (this.web3) {
+      const myContract = this.web3.eth.contract(abi)
+      this.contractInstance = myContract.at(contractAddress)
+      this.loading = 0
+      this.updateState()
+      setInterval(this.updateState.bind(this), ONE_MINUTE)
+    } else {
+      this.state.infoMessage = "Cannot connect to blockchain"
+      this.state.messageColor = "red"
+    }
   }
 
-  warnMessage(message) {
-    alert(message)
+  setInfoMessage(message, color) {
+    // this.setState({ infoMessage: message })
+    // this.setState({ messageColor: color || "black" })
+    ReactDOM.render(
+      <div >{message}</div>,
+      document.getElementById("dappInfo")
+    )
   }
 
   updateState() {
@@ -81,6 +92,10 @@ class App extends Component {
     })
   }
 
+  getCoinFromId(id) {
+    return this.state.coins.find((coin) => coin.id === id)
+  }
+
   getIdFromCode(code) {
     const code0 = code.charCodeAt(0) - 65
     const code1 = code.charCodeAt(1) - 65
@@ -89,9 +104,10 @@ class App extends Component {
   }
 
   createNewCoin() {
+    this.setInfoMessage("Attempting to create new coin...")
     this.setState({ creatingCoin: false })
     const { newCoinId, newCoinName, newCoinFee } = this.state
-    if (this.web3.eth.accounts[0]) {
+    if (this.web3 && this.web3.eth.accounts[0]) {
       this.contractInstance.createCoin(
         this.getIdFromCode(newCoinId),
         newCoinName,
@@ -102,24 +118,23 @@ class App extends Component {
         },
         (err, result) => {
           if (result != null) {
-            // SUCCESS
-            // TODO: Need to show user that this event has happened
-            // And conclude when transaction succeeds
+            this.setInfoMessage("Transaction processing..")
           } else {
-            // FAIL
+            this.setInfoMessage("Transaction failed, you have not been charged", "red")
           }
           console.log(result, err)
         }
       )
     } else {
-      this.warnMessage("Address not found")
+      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
     }
   }
 
   buyCoin(coinId) {
-    console.log("BUY")
-    const price = this.state.coins[coinId].price
-    if (this.web3.eth.accounts[0]) {
+    this.setInfoMessage("Attempting to buy coin...")
+    console.log(this.state.coins)
+    const price = this.getCoinFromId(coinId).price
+    if (this.web3 && this.web3.eth.accounts[0]) {
       this.contractInstance.buyCoin(
         coinId,
         {
@@ -129,22 +144,20 @@ class App extends Component {
         },
         (err, result) => {
           if (result != null) {
-            // SUCCESS
-            // TODO: Need to show user that this event has happened
-            // And conclude when transaction succeeds
+            this.setInfoMessage("Transaction processing..")
           } else {
-            // FAIL
+            this.setInfoMessage("Transaction failed, you have not been charged", "red")
           }
           console.log(result, err)
         })
     } else {
-      this.warnMessage("Address not found")
+      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
     }
   }
 
   sellCoin(coinId) {
-    console.log("SELL:", coinId)
-    if (this.web3.eth.accounts[0]) {
+    this.setInfoMessage("Attempting to sell coin...")
+    if (this.web3 && this.web3.eth.accounts[0]) {
       this.contractInstance.sellCoin(
         coinId,
         {
@@ -153,25 +166,23 @@ class App extends Component {
         },
         (err, result) => {
           if (result != null) {
-            // SUCCESS
+            this.setInfoMessage("Transaction processing..")
             this.updateState()
           } else {
-            // FAIL
+            this.setInfoMessage("Transaction failed, you have not been charged", "red")
           }
           console.log(result, err)
         })
     } else {
-      this.warnMessage("Address not found")
+      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
     }
   }
 
   render() {
-    const { newCoinFee, coins, creatingCoin, newCoinId, newCoinName } = this.state
-    const userAddress = this.web3.eth.accounts[0]
+    const { newCoinFee, coins, creatingCoin, newCoinId, newCoinName, infoMessage, messageColor } = this.state
+    const userAddress = this.web3 && this.web3.eth.accounts[0]
     return (
-      <div>
-        (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
-        <h3>Coins:</h3>
+      <div style={{ paddingTop: 50, paddingBottom: 50, paddingLeft: 10, paddingRight: 10 }}>
         {coins.map((o, i) => {
           return <Coin
             userAddress={userAddress}
@@ -186,27 +197,35 @@ class App extends Component {
             key={i}
           />
         })}
-        {creatingCoin &&
-          <div>
-            CoinId: <input
-              type="text"
-              value={newCoinId}
-              onChange={e => {
-                let newValue = e.target.value.toUpperCase()
-                newValue = newValue.replace(/[^a-zA-Z]/g, '')
-                if (newValue.length == 3) console.log(newValue, this.getIdFromCode(newValue))
-                if (newValue.length < 4) {
-                  this.setState({ newCoinId: newValue })
-                }
-              }} />
-            Name: <input type="text" value={newCoinName} onChange={e => this.setState({
-              newCoinName: e.target.value
-            })} />
-            <input type="button" value="Create" onClick={() => this.createNewCoin()} />
-            <input type="button" value="Cancel" onClick={() => this.setState({ creatingCoin: false })} />
-          </div>
-          ||
-          <input type="button" value="Create New Coin" onClick={() => this.setState({ creatingCoin: true })} />}
+        {infoMessage ?
+          <div style={{ textAlign: "center", color: messageColor }}><h3>{infoMessage}</h3></div>
+          : null}
+        <div style={{ textAlign: "center", padding: 20 }}>
+          (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
+        </div>
+        <div style={{ textAlign: "center", padding: 20 }}>
+          {creatingCoin &&
+            <div>
+              CoinId: <input
+                type="text"
+                value={newCoinId}
+                onChange={e => {
+                  let newValue = e.target.value.toUpperCase()
+                  newValue = newValue.replace(/[^a-zA-Z]/g, '')
+                  if (newValue.length == 3) console.log(newValue, this.getIdFromCode(newValue))
+                  if (newValue.length < 4) {
+                    this.setState({ newCoinId: newValue })
+                  }
+                }} />
+              Name: <input type="text" value={newCoinName} onChange={e => this.setState({
+                newCoinName: e.target.value
+              })} />
+              <input type="button" value="Create" onClick={() => this.createNewCoin()} />
+              <input type="button" value="Cancel" onClick={() => this.setState({ creatingCoin: false })} />
+            </div>
+            ||
+            <input type="button" value="Create New Coin" onClick={() => this.setState({ creatingCoin: true })} />}
+        </div>
       </div>
     )
   }
