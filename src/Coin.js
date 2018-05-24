@@ -38,13 +38,13 @@ class Coin extends Component {
       <div style={{ height: "200%", borderColor: "transparent", borderRadius: 15, borderStyle: "solid", borderWidth: 2, padding: 10, margin: 10, backgroundColor: "#18BC9C" }}>
         <div style={{ borderColor: "transparent", borderRadius: 10, borderStyle: "solid", borderWidth: 1, padding: 5, margin: 2, backgroundColor: "#EEEE" }}>
           <div style={{ padding: 10 }}>
-            <b>{name}</b> ({coinCode}), Market Value: {marketValue}{" "}ETH
+            <b>{name}</b> ({coinCode}),<br />Market Value: {marketValue}{" "}ETH
             <span style={{ float: "right" }}>
               {investors.includes(userAddress)
                 ?
-                <input type="button" value={`Sell for ${sellAmount}`} onClick={() => this.sellCoin()} />
+                <input type="button" value={`SELL FOR ${sellAmount}`} onClick={() => this.sellCoin()} />
                 :
-                <input type="button" value={`Buy for ${price}`} onClick={() => this.buyCoin()} />
+                <input type="button" value={`BUY FOR ${price}`} onClick={() => this.buyCoin()} />
               }
             </span>
           </div>

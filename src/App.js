@@ -19,7 +19,6 @@ class App extends Component {
       creatingCoin: false,
       newCoinId: "",
       newCoinName: "",
-      infoMessage: ""
     }
 
     if (typeof web3 !== "undefined") {
@@ -42,8 +41,6 @@ class App extends Component {
   }
 
   setInfoMessage(message, color) {
-    // this.setState({ infoMessage: message })
-    // this.setState({ messageColor: color || "black" })
     ReactDOM.render(
       <div>{message}</div>,
       document.getElementById("dappInfo")
@@ -168,7 +165,6 @@ class App extends Component {
         (err, result) => {
           if (result != null) {
             this.setInfoMessage("Transaction processing..")
-            this.updateState()
           } else {
             this.setInfoMessage("Transaction failed, you have not been charged", "red")
           }
@@ -178,6 +174,29 @@ class App extends Component {
       this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
     }
   }
+
+  // COMMENT THIS OUT FOR LIVE
+  collectDevFees() {
+    this.setInfoMessage("Attempting to collect dev fees...")
+    if (this.web3 && this.web3.eth.accounts[0]) {
+      this.contractInstance.collectDevFees(
+        {
+          gas: 300000,
+          from: web3.eth.accounts[0],
+        },
+        (err, result) => {
+          if (result != null) {
+            this.setInfoMessage("Transaction processing..")
+          } else {
+            this.setInfoMessage("Transaction failed, you have not been charged", "red")
+          }
+          console.log(result, err)
+        })
+    } else {
+      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+    }
+  }
+
 
   render() {
     const { newCoinFee, coins, creatingCoin, newCoinId, newCoinName, infoMessage, messageColor } = this.state
@@ -208,6 +227,8 @@ class App extends Component {
           {creatingCoin &&
             <div>
               CoinId: <input
+                placeholder="e.g BTC"
+                style={{ margin: 5 }}
                 type="text"
                 value={newCoinId}
                 onChange={e => {
@@ -218,14 +239,29 @@ class App extends Component {
                     this.setState({ newCoinId: newValue })
                   }
                 }} />
-              Name: <input type="text" value={newCoinName} onChange={e => this.setState({
-                newCoinName: e.target.value
-              })} />
-              <input type="button" value="Create" onClick={() => this.createNewCoin()} />
-              <input type="button" value="Cancel" onClick={() => this.setState({ creatingCoin: false })} />
+              <br />
+              Name: <input
+                placeholder="e.g Bitcoin"
+                style={{ margin: 5 }}
+                type="text"
+                value={newCoinName}
+                onChange={e => this.setState({
+                  newCoinName: e.target.value
+                })} />
+              <br />
+              <input
+                style={{ margin: 5 }}
+                type="button"
+                value="Create"
+                onClick={() => this.createNewCoin()} />
+              <input
+                style={{ margin: 5 }}
+                type="button"
+                value="Cancel"
+                onClick={() => this.setState({ creatingCoin: false })} />
             </div>
             ||
-            <input style={{ borderRadius: 5, padding: 10 }} type="button" value="Create New Coin" onClick={() => this.setState({ creatingCoin: true })} />}
+            <input style={{ borderRadius: 5, padding: 10 }} type="button" value="CREATE NEW COIN" onClick={() => this.setState({ creatingCoin: true })} />}
         </div>
       </div>
     )
