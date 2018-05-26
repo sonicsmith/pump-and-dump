@@ -1,7 +1,7 @@
 pragma solidity ^0.4.23;
 
-import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
-// import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+// import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract PumpAndDump {
 
@@ -27,6 +27,11 @@ contract PumpAndDump {
 
   constructor() public {
     owner = msg.sender;
+  }
+
+  function kill() external {
+    require(msg.sender == owner);
+    selfdestruct(owner);
   }
 
   function getNewCoinFee() public constant returns (uint) {
@@ -133,9 +138,9 @@ contract PumpAndDump {
     payAndRemoveInvestor(coinId, investorIndex);
   }
 
-  function extractDevFee(uint amount, uint percent) private view returns (uint) {
+  function extractDevFee(uint amount, uint percent) private returns (uint) {
     uint fee = amount.mul(percent).div(100);
-    devFees.add(fee);
+    devFees = devFees.add(fee);
     return amount.sub(fee);
   }
 
