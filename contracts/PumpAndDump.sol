@@ -73,6 +73,7 @@ contract PumpAndDump {
 
   function getUserCoinMarketValue(uint16 coinId, uint userIndex) public view returns (uint) {
       uint numInvestors = coins[coinId].investors.length;
+      // If this is the most recent investor
       if (numInvestors == userIndex.add(1)) {
         return coins[coinId].price;
       } else {
@@ -101,7 +102,7 @@ contract PumpAndDump {
     coins[coinId].price = coins[coinId].price.add(coinPriceIncrease);
   }
 
-  function removeInvestor(uint16 coinId, uint investorIndex) public {
+  function payAndRemoveInvestor(uint16 coinId, uint investorIndex) private {
     uint value = getUserCoinMarketValue(coinId, investorIndex);
     coins[coinId].investors[investorIndex].transfer(value);
     coins[coinId].price = coins[coinId].price.sub(coinPriceIncrease);
@@ -129,11 +130,11 @@ contract PumpAndDump {
       }
     }
     require(senderIsInvestor);
-    removeInvestor(coinId, investorIndex);
+    payAndRemoveInvestor(coinId, investorIndex);
   }
 
   function extractDevFee(uint amount, uint percent) private view returns (uint) {
-    uint fee = amount.mul(percent / 100);
+    uint fee = amount.mul(percent).div(100);
     devFees.add(fee);
     return amount.sub(fee);
   }
