@@ -30,19 +30,22 @@ class Coin extends Component {
     const { id, name, price, marketValue, investors, userAddress } = this.props
     let sellAmount
     if (investors.includes(userAddress)) {
-      const investorRank = investors.length - (investors.indexOf(userAddress))
-      sellAmount = (marketValue / investors.length) * investorRank
+      const numInvestors = investors.length
+      const numShares = (numInvestors * (numInvestors + 1)) / 2;
+      sellAmount = ((numInvestors - investors.indexOf(userAddress)) * marketValue) / numShares;
+      sellAmount = sellAmount.toFixed(5)
     }
+    const sellButtonText = investors.length > 3 ? "SELL" : `SELL FOR ${sellAmount}`
     const coinCode = this.getCodeFromId(id)
     return (
       <div style={{ height: "200%", borderColor: "transparent", borderRadius: 15, borderStyle: "solid", borderWidth: 2, padding: 10, margin: 10, backgroundColor: "#18BC9C" }}>
         <div style={{ borderColor: "transparent", borderRadius: 10, borderStyle: "solid", borderWidth: 1, padding: 5, margin: 2, backgroundColor: "#EEEE" }}>
           <div style={{ padding: 10 }}>
-            <b>{name}</b> ({coinCode}),<br />Market Value: {marketValue}{" "}ETH
+            <b>{name}</b> ({coinCode}),<br />Market Value: {marketValue.toFixed(5)}{" "}ETH
             <span style={{ float: "right" }}>
               {investors.includes(userAddress)
                 ?
-                <input type="button" value={`SELL FOR ${sellAmount}`} onClick={() => this.sellCoin()} />
+                <input type="button" value={sellButtonText} onClick={() => this.sellCoin()} />
                 :
                 <input type="button" value={`BUY FOR ${price}`} onClick={() => this.buyCoin()} />
               }

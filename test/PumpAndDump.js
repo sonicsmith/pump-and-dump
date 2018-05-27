@@ -1,5 +1,7 @@
 const PumpAndDump = artifacts.require("PumpAndDump")
 
+const timeout = ms => new Promise(res => setTimeout(res, ms))
+
 contract("PumpAndDump", (accounts) => {
 
   it("should start with zero devfees", async () => {
@@ -40,6 +42,18 @@ contract("PumpAndDump", (accounts) => {
 
     assert.equal(devfeesAfter.toNumber(), (devfeesBefore.toNumber() + (coinFee * 0.01)), "devfees not changed")
     assert.equal(coinInfo[3].length, 2, "investors not changed")
+  })
+
+  it("should calculate correct profit", async () => {
+    const instance = await PumpAndDump.deployed()
+    let profit = await instance.getUserCoinMarketValue(0, 0)
+    profit = profit.toNumber()
+    let marketValue = await instance.getCoinInfoFromId.call(0)
+    marketValue = marketValue[2].toNumber()
+    let expectedProfit = (marketValue / 3) * 2
+    profit = Number.parseFloat(profit).toPrecision(4)
+    expectedProfit = Number.parseFloat(expectedProfit).toPrecision(4)
+    assert.equal(profit, expectedProfit)
   })
 
 

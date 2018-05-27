@@ -51,6 +51,10 @@ class App extends Component {
     if (!this.web3 || this.loading > 0) {
       return
     }
+    this.contractInstance.getDevFees((err, fees) => {
+      console.log(this.web3.fromWei(fees, "ether").toNumber())
+    })
+
     console.log("Checking if need to update state")
     this.loading++
     this.contractInstance.getNewCoinFee((err, newCoinFee) => {
@@ -211,8 +215,8 @@ class App extends Component {
             id={o.id}
             name={o.name}
             coinId={o.coinId}
-            price={this.web3.fromWei(o.price, "ether").toString(10)}
-            marketValue={this.web3.fromWei(o.marketValue, "ether").toString(10)}
+            price={this.web3.fromWei(o.price, "ether").toNumber()}
+            marketValue={this.web3.fromWei(o.marketValue, "ether").toNumber()}
             investors={o.investors}
             key={i}
           />

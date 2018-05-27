@@ -1,11 +1,6 @@
 pragma solidity ^0.4.23;
 
-// import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-
 contract PumpAndDump {
-
-  using SafeMath for uint256;
 
   address owner;
   uint newCoinFee = 0.005 ether;
@@ -54,13 +49,14 @@ contract PumpAndDump {
     require(bytes(name).length > 0);
     require(isCoinIdUnique(id));
     uint amount = extractDevFee(msg.value, 90);
+
     coins[id].exists = true;
     coins[id].name = name;
     coins[id].price = defaultCoinPrice;
     coins[id].marketValue = amount;
     coins[id].investors.push(msg.sender);
     coinIds.push(id);
-    newCoinFee = newCoinFee.add(newCoinFeeIncrease);
+    newCoinFee += newCoinFeeIncrease;
   }
 
   function getCoinIds() public view returns (uint16[]) {
@@ -79,12 +75,11 @@ contract PumpAndDump {
   function getUserCoinMarketValue(uint16 coinId, uint userIndex) public view returns (uint) {
       uint numInvestors = coins[coinId].investors.length;
       // If this is the most recent investor
-      if (numInvestors == userIndex.add(1)) {
+      if (numInvestors == userIndex + 1) {
         return coins[coinId].price;
       } else {
-        uint numShares = (numInvestors.mul(numInvestors.add(1))).div(2);
-        uint atomWeight = coins[coinId].marketValue.div(numShares);
-        return (numInvestors - userIndex).mul(atomWeight);
+        uint numShares = (numInvestors * (numInvestors + 1)) / 2;
+        return ((numInvestors - userIndex) * coins[coinId].marketValue) / numShares;
       }
   }
 
@@ -103,24 +98,25 @@ contract PumpAndDump {
     require(!isSenderInvestor(msg.sender, coins[coinId].investors));
     coins[coinId].investors.push(msg.sender);
     uint amount = extractDevFee(msg.value, 1);
-    coins[coinId].marketValue = coins[coinId].marketValue.add(amount);
-    coins[coinId].price = coins[coinId].price.add(coinPriceIncrease);
+    
+    coins[coinId].marketValue += amount;
+    coins[coinId].price += coinPriceIncrease;
   }
 
   function payAndRemoveInvestor(uint16 coinId, uint investorIndex) private {
     uint value = getUserCoinMarketValue(coinId, investorIndex);
     coins[coinId].investors[investorIndex].transfer(value);
-    coins[coinId].price = coins[coinId].price.sub(coinPriceIncrease);
-    coins[coinId].marketValue = coins[coinId].marketValue.sub(value);
+    coins[coinId].price -= coinPriceIncrease;
+    coins[coinId].marketValue -= value;
     if (coins[coinId].investors.length == 1) {
       delete coins[coinId].investors[0];
     } else {
-      uint secondLastIndex = coins[coinId].investors.length.sub(1);
+      uint secondLastIndex = coins[coinId].investors.length - 1;
       for (uint j = investorIndex; j < secondLastIndex; j++) {
-        coins[coinId].investors[j] = coins[coinId].investors[j.add(1)];
+        coins[coinId].investors[j] = coins[coinId].investors[j - 1];
       }
     }
-    coins[coinId].investors.length = coins[coinId].investors.length.sub(1);
+    coins[coinId].investors.length -= 1;
   }
 
   function sellCoin(uint16 coinId) public {
@@ -139,9 +135,9 @@ contract PumpAndDump {
   }
 
   function extractDevFee(uint amount, uint percent) private returns (uint) {
-    uint fee = amount.mul(percent).div(100);
-    devFees = devFees.add(fee);
-    return amount.sub(fee);
+    uint fee = (amount * percent) / 100;
+    devFees += fee;
+    return amount - fee;
   }
 
   function getDevFees() public view returns (uint) {
