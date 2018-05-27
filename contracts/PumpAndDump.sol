@@ -33,7 +33,7 @@ contract PumpAndDump {
     return newCoinFee;
   }
 
-  function isCoinIdUnique(uint16 newId) public constant returns (bool) {
+  function isCoinIdUnique(uint16 newId) private constant returns (bool) {
     for (uint i = 0; i < coinIds.length; i++) {
       if (coinIds[i] == newId) {
         return false;
@@ -48,12 +48,11 @@ contract PumpAndDump {
     require(id < 17576); // 26*26*26
     require(bytes(name).length > 0);
     require(isCoinIdUnique(id));
-    uint amount = extractDevFee(msg.value, 90);
-
+    devFees += msg.value - defaultCoinPrice;
     coins[id].exists = true;
     coins[id].name = name;
     coins[id].price = defaultCoinPrice;
-    coins[id].marketValue = amount;
+    coins[id].marketValue = defaultCoinPrice;
     coins[id].investors.push(msg.sender);
     coinIds.push(id);
     newCoinFee += newCoinFeeIncrease;
@@ -72,7 +71,7 @@ contract PumpAndDump {
     );
   }
 
-  function getUserCoinMarketValue(uint16 coinId, uint userIndex) public view returns (uint) {
+  function getUserCoinMarketValue(uint16 coinId, uint userIndex) private view returns (uint) {
       uint numInvestors = coins[coinId].investors.length;
       // If this is the most recent investor
       if (numInvestors == userIndex + 1) {
@@ -83,7 +82,7 @@ contract PumpAndDump {
       }
   }
 
-  function isSenderInvestor(address sender, address[] investors) public pure returns (bool) {
+  function isSenderInvestor(address sender, address[] investors) private pure returns (bool) {
     for (uint i = 0; i < investors.length; i++) {
       if (investors[i] == sender) {
         return true;
@@ -97,8 +96,8 @@ contract PumpAndDump {
     require(coins[coinId].exists);
     require(!isSenderInvestor(msg.sender, coins[coinId].investors));
     coins[coinId].investors.push(msg.sender);
-    uint amount = extractDevFee(msg.value, 1);
-    
+    uint amount = (msg.value * 99) / 100;
+    devFees += msg.value - amount;
     coins[coinId].marketValue += amount;
     coins[coinId].price += coinPriceIncrease;
   }
@@ -134,13 +133,8 @@ contract PumpAndDump {
     payAndRemoveInvestor(coinId, investorIndex);
   }
 
-  function extractDevFee(uint amount, uint percent) private returns (uint) {
-    uint fee = (amount * percent) / 100;
-    devFees += fee;
-    return amount - fee;
-  }
-
   function getDevFees() public view returns (uint) {
+    require(msg.sender == owner);
     return devFees;
   }
 

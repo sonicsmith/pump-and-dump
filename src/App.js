@@ -158,24 +158,26 @@ class App extends Component {
   }
 
   sellCoin(coinId) {
-    this.setInfoMessage("Attempting to sell coin...")
-    if (this.web3 && this.web3.eth.accounts[0]) {
-      this.contractInstance.sellCoin(
-        coinId,
-        {
-          gas: 300000,
-          from: web3.eth.accounts[0],
-        },
-        (err, result) => {
-          if (result != null) {
-            this.setInfoMessage("Transaction processing..")
-          } else {
-            this.setInfoMessage("Transaction failed, you have not been charged", "red")
-          }
-          console.log(result, err)
-        })
-    } else {
-      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+    if (confirm("Selling a coin will require a small transaction fee")) {
+      this.setInfoMessage("Attempting to sell coin...")
+      if (this.web3 && this.web3.eth.accounts[0]) {
+        this.contractInstance.sellCoin(
+          coinId,
+          {
+            gas: 300000,
+            from: web3.eth.accounts[0],
+          },
+          (err, result) => {
+            if (result != null) {
+              this.setInfoMessage("Transaction processing..")
+            } else {
+              this.setInfoMessage("Transaction failed, you have not been charged", "red")
+            }
+            console.log(result, err)
+          })
+      } else {
+        this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+      }
     }
   }
 
@@ -226,6 +228,8 @@ class App extends Component {
           : null}
         <div style={{ textAlign: "center", padding: 5 }}>
           (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
+          <br />
+          It can take up to a minute for transactions to process, please be patient
         </div>
         <div style={{ textAlign: "center", padding: 20 }}>
           {creatingCoin &&
