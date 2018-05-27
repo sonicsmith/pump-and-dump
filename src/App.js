@@ -227,9 +227,9 @@ class App extends Component {
           <div style={{ textAlign: "center", color: messageColor }}><h3>{infoMessage}</h3></div>
           : null}
         <div style={{ textAlign: "center", padding: 5 }}>
-          (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
-          <br />
           It can take up to a minute for transactions to process, please be patient
+          <br />
+          (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
         </div>
         <div style={{ textAlign: "center", padding: 20 }}>
           {creatingCoin &&
