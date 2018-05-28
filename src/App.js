@@ -4,7 +4,7 @@ import { abi } from "./../build/contracts/PumpAndDump.json"
 import { contractAddress } from "./constants"
 import Coin from "./Coin"
 import Web3 from "web3"
-const portis = require('portis')
+import { PortisProvider } from "portis"
 
 const ONE_MINUTE = 60000
 
@@ -26,7 +26,9 @@ class App extends Component {
       this.setInfoMessage("Connected to blockchain with Web3 provider", "green")
     } else {
       console.log("Using Portis for web3")
-      this.web3 = new Web3(new portis.PortisProvider())
+      this.web3 = new Web3(new Portis.PortisProvider({
+        apiKey: "11c09071df2fda994f1bb97445a26f2b"
+      }));
       this.setInfoMessage("Connected to blockchain with Portis", "green")
     }
     if (this.web3) {
