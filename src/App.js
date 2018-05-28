@@ -109,7 +109,6 @@ class App extends Component {
 
   createNewCoin() {
     this.setInfoMessage("Attempting to create new coin...")
-    this.setState({ creatingCoin: false })
     const { newCoinId, newCoinName, newCoinFee } = this.state
     if (this.web3 && this.web3.eth.accounts[0]) {
       this.contractInstance.createCoin(
@@ -121,6 +120,7 @@ class App extends Component {
           value: newCoinFee
         },
         (err, result) => {
+          this.setState({ creatingCoin: false })
           if (result != null) {
             this.setInfoMessage("Transaction processing..")
           } else {
