@@ -26,7 +26,7 @@ class App extends Component {
       this.setInfoMessage("Connected to blockchain with Web3 provider", "green")
     } else {
       console.log("Using Portis for web3")
-      this.web3 = new Web3(new Portis.PortisProvider({
+      this.web3 = new Web3(new PortisProvider({
         apiKey: "11c09071df2fda994f1bb97445a26f2b"
       }));
       this.setInfoMessage("Connected to blockchain with Portis", "green")
@@ -53,9 +53,9 @@ class App extends Component {
     if (!this.web3 || this.loading > 0) {
       return
     }
-    this.contractInstance.getDevFees((err, fees) => {
-      console.log(this.web3.fromWei(fees, "ether").toNumber())
-    })
+    // this.contractInstance.getDevFees((err, fees) => {
+    //   console.log(this.web3.fromWei(fees, "ether").toNumber())
+    // })
 
     console.log("Checking if need to update state")
     this.loading++
@@ -184,26 +184,26 @@ class App extends Component {
   }
 
   // COMMENT THIS OUT FOR LIVE
-  collectDevFees() {
-    this.setInfoMessage("Attempting to collect dev fees...")
-    if (this.web3 && this.web3.eth.accounts[0]) {
-      this.contractInstance.collectDevFees(
-        {
-          gas: 300000,
-          from: web3.eth.accounts[0],
-        },
-        (err, result) => {
-          if (result != null) {
-            this.setInfoMessage("Transaction processing..")
-          } else {
-            this.setInfoMessage("Transaction failed, you have not been charged", "red")
-          }
-          console.log(result, err)
-        })
-    } else {
-      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
-    }
-  }
+  // collectDevFees() {
+  //   this.setInfoMessage("Attempting to collect dev fees...")
+  //   if (this.web3 && this.web3.eth.accounts[0]) {
+  //     this.contractInstance.collectDevFees(
+  //       {
+  //         gas: 300000,
+  //         from: web3.eth.accounts[0],
+  //       },
+  //       (err, result) => {
+  //         if (result != null) {
+  //           this.setInfoMessage("Transaction processing..")
+  //         } else {
+  //           this.setInfoMessage("Transaction failed, you have not been charged", "red")
+  //         }
+  //         console.log(result, err)
+  //       })
+  //   } else {
+  //     this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+  //   }
+  // }
 
 
   render() {
