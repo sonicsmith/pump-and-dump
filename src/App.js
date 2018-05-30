@@ -28,7 +28,7 @@ class App extends Component {
       console.log("Using Portis for web3")
       this.web3 = new Web3(new PortisProvider({
         apiKey: "11c09071df2fda994f1bb97445a26f2b"
-      }));
+      }))
       this.setInfoMessage("Connected to blockchain with Portis", "green")
     }
     if (this.web3) {
@@ -136,7 +136,6 @@ class App extends Component {
 
   buyCoin(coinId) {
     this.setInfoMessage("Attempting to buy coin...")
-    console.log(this.state.coins)
     const price = this.getCoinFromId(coinId).price
     if (this.web3 && this.web3.eth.accounts[0]) {
       this.contractInstance.buyCoin(
@@ -229,7 +228,9 @@ class App extends Component {
           <div style={{ textAlign: "center", color: messageColor }}><h3>{infoMessage}</h3></div>
           : null}
         <div style={{ textAlign: "center", padding: 5 }}>
-          It can take up to a minute for transactions to process, please be patient
+          It can take up to a minute for transactions to process, please be patient.
+          <br />
+          If you are experiencing long waits or issues, try putting a higher gas fee on.
           <br />
           (Price to create new coin: {this.web3.fromWei(newCoinFee, "ether").toString(10)} ETH)
         </div>
