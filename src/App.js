@@ -110,52 +110,56 @@ class App extends Component {
   createNewCoin() {
     this.setInfoMessage("Attempting to create new coin...")
     const { newCoinId, newCoinName, newCoinFee } = this.state
-    if (this.web3 && this.web3.eth.accounts[0]) {
-      this.contractInstance.createCoin(
-        this.getIdFromCode(newCoinId),
-        newCoinName,
-        {
-          gas: 300000,
-          from: this.web3.eth.accounts[0],
-          value: newCoinFee
-        },
-        (err, result) => {
-          this.setState({ creatingCoin: false })
-          if (result != null) {
-            this.setInfoMessage("Transaction processing..")
-          } else {
-            this.setInfoMessage("Transaction failed, you have not been charged", "red")
+    this.web3.eth.getAccounts((err, accounts) => {
+      if (accounts.length) {
+        this.contractInstance.createCoin(
+          this.getIdFromCode(newCoinId),
+          newCoinName,
+          {
+            gas: 300000,
+            from: accounts[0],
+            value: newCoinFee
+          },
+          (err, result) => {
+            this.setState({ creatingCoin: false })
+            if (result != null) {
+              this.setInfoMessage("Transaction processing..")
+            } else {
+              this.setInfoMessage("Transaction failed, you have not been charged", "red")
+            }
+            console.log(result, err)
           }
-          console.log(result, err)
-        }
-      )
-    } else {
-      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
-    }
+        )
+      } else {
+        this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+      }
+    })
   }
 
   buyCoin(coinId) {
     this.setInfoMessage("Attempting to buy coin...")
     const price = this.getCoinFromId(coinId).price
-    if (this.web3 && this.web3.eth.accounts[0]) {
-      this.contractInstance.buyCoin(
-        coinId,
-        {
-          gas: 300000,
-          from: this.web3.eth.accounts[0],
-          value: price
-        },
-        (err, result) => {
-          if (result != null) {
-            this.setInfoMessage("Transaction processing..")
-          } else {
-            this.setInfoMessage("Transaction failed, you have not been charged", "red")
-          }
-          console.log(result, err)
-        })
-    } else {
-      this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
-    }
+    this.web3.eth.getAccounts((err, accounts) => {
+      if (accounts.length) {
+        this.contractInstance.buyCoin(
+          coinId,
+          {
+            gas: 300000,
+            from: accounts[0],
+            value: price
+          },
+          (err, result) => {
+            if (result != null) {
+              this.setInfoMessage("Transaction processing..")
+            } else {
+              this.setInfoMessage("Transaction failed, you have not been charged", "red")
+            }
+            console.log(result, err)
+          })
+      } else {
+        this.setInfoMessage("Error: Cannot connect to blockchain, are you logged in?", "red")
+      }
+    })
   }
 
   sellCoin(coinId) {
